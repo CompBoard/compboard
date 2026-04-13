@@ -358,6 +358,7 @@
   .waveform-ctrl.pinned {
     background: var(--accent); color: #fff;
     box-shadow: 0 1px 4px rgba(59,130,246,0.5);
+    position: relative; z-index: 10;
   }
   .waveform-ctrl.pinned:hover { background: #2563eb; }
 
@@ -550,6 +551,8 @@
   .sb-frame-btn.pin.pinned {
     color: white; background: var(--accent);
     box-shadow: 0 1px 4px rgba(59,130,246,0.4);
+    /* Elevate above draw-canvas (z-index:5) so it stays clickable when frame is pinned */
+    position: relative; z-index: 10;
   }
   .sb-frame-btn.pin.pinned:hover { background: var(--accent-hover); color: white; }
 
@@ -565,7 +568,7 @@
     line-height: 1; padding: 0;
   }
   .pin-btn:hover { color: var(--accent); border-color: var(--accent); }
-  .pin-btn.pinned { background: var(--accent); border-color: var(--accent); color: white; }
+  .pin-btn.pinned { background: var(--accent); border-color: var(--accent); color: white; position: relative; z-index: 10; }
   .pinned-element { cursor: default !important; }
   .pinned-element .sb-frame-header { cursor: default !important; }
 
@@ -1310,6 +1313,10 @@ drawCanvas.height = 8000;
 // Transform cache — keeps drawing overlay coords in sync without layout reflow
 let _tx = 0, _ty = 0, _tz = 1;
 
+// TOOLBAR_H declared here so it's available to all functions below.
+// Updated dynamically by updateToolbarH() after DOM is ready.
+let TOOLBAR_H = 86;
+
 // Calculate the minimum zoom so the canvas always fills the viewport.
 // Canvas is CANVAS_SIZE px; viewport excludes toolbar + statusbar.
 function getMinZoom() {
@@ -1466,6 +1473,31 @@ container.addEventListener('mousedown', e => {
 window.addEventListener('mousemove', e => {
   const pos = toCanvas(e.clientX, e.clientY);
   document.getElementById('status-pos').textContent = `${Math.round(pos.x)}, ${Math.round(pos.y)}`;
+
+  // When a drawing tool is active, check if the cursor is over a pinned element.
+  // elementFromPoint uses z-index stacking — pinned elements are at z-index:3,
+  // below draw-canvas at z-index:5. We must use visibility:hidden (not
+  // pointer-events:none) to temporarily remove the draw-canvas from the stack
+  // so elementFromPoint can find what's underneath it.
+  if (state.tool === 'draw' || state.tool === 'erase' || state.tool === 'shape') {
+    overlay.style.visibility   = 'hidden';
+    drawCanvas.style.visibility = 'hidden';
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    overlay.style.visibility   = '';
+    drawCanvas.style.visibility = '';
+
+    // Consider hovering over the frame body (below ink) as "over pinned"
+    // but hovering over the frame header (above ink) as NOT pinned —
+    // so the cursor correctly shows default over header (clickable) and
+    // crosshair over the body area (drawable).
+    const overPinned = under && (
+      under.closest('.pinned-element') ||
+      under.closest('[data-pinned="true"]')
+    );
+    const cur = overPinned ? 'default' : 'crosshair';
+    container.style.cursor = cur;
+    overlay.style.cursor   = cur;
+  }
 });
 
 // Wheel handler — separates trackpad scroll from zoom gestures.
@@ -1549,7 +1581,6 @@ function getToolbarH() {
   if (tb && tt) return tb.offsetHeight + tt.offsetHeight;
   return 86;
 }
-let TOOLBAR_H = 86;
 function updateToolbarH() {
   TOOLBAR_H = getToolbarH();
 }
@@ -2112,6 +2143,8 @@ function makePinnable(el, pinBtn) {
         const hdr = el.querySelector('.waveform-header');
         if (hdr) { hdr.style.zIndex = ''; hdr.style.position = ''; }
       }
+    } else if (el.classList.contains('sb-frame')) {
+      el.style.zIndex = isPinned ? '3' : getNaturalZ();
     } else {
       el.style.zIndex = isPinned ? '3' : getNaturalZ();
     }
@@ -3429,9 +3462,15 @@ function loadProject(proj) {
         pinBtn.classList.add('pinned');
         pinBtn.textContent = '⊗';
         pinBtn.title = 'Unpin (unlock position)';
+        pinBtn.style.position = 'relative';
+        pinBtn.style.zIndex   = '10';
       }
       frame.classList.add('pinned-element');
-      frame.style.zIndex = '3'; // below draw-canvas so ink draws on top
+      frame.style.zIndex = '4';
+      const body = frame.querySelector('.sb-frame-body');
+      const hdr  = frame.querySelector('.sb-frame-header');
+      if (body) { body.style.position = 'relative'; body.style.zIndex = '1'; }
+      if (hdr)  { hdr.style.position  = 'relative'; hdr.style.zIndex  = '10'; }
     }
     // Restore draw canvas
     if (f.drawData) {
@@ -3564,8 +3603,10 @@ WORKSPACES
 
 PIN SYSTEM
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
-  Frames, images, text labels, and the audio waveform all have a pin button (⊙).
+  Images, text labels, and the audio waveform all have a pin button (⊙).
   Pinning locks the element in place and drops it below the ink layer so you can draw over it freely. Click ⊗ to unpin and restore normal behaviour.
+
+  Frames also have a pin button which locks them in position so they cannot be accidentally moved. However pinned frames remain on the same layer as unpinned frames — you cannot draw over a pinned frame. To switch to the select tool to interact with a pinned frame, use the keyboard shortcut V.
 
 AUTO-SAVE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
