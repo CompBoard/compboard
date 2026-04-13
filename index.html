@@ -18,8 +18,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Comp Board">
 <link rel="manifest" href="manifest.json">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" crossorigin="anonymous"></script>
 
 <!-- Fonts — preconnect for speed, swap prevents invisible text during load -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2150,6 +2150,28 @@ function makeResizable(el, onResize) {
 }
 
 // ═══════════════════════════════════════════════════════════
+// SECURITY HELPERS
+// ═══════════════════════════════════════════════════════════
+// Escape a string so it is safe to inject into an HTML attribute value.
+// Used when building innerHTML template strings with user-supplied data.
+function escAttr(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+// Escape a string safe for injection between HTML tags (text content).
+function escText(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+// ═══════════════════════════════════════════════════════════
 // STORYBOARD FRAMES
 // ═══════════════════════════════════════════════════════════
 function addFrame(opts) {
@@ -2163,7 +2185,8 @@ function addFrame(opts) {
   const y = opts?.y ?? (viewCY - 100 + (Math.random() * 80 - 40));
   const w = opts?.w ?? 280;
   const h = opts?.h ?? 200;
-  const title = opts?.title ?? `Frame ${state.frameCount}`;
+  const rawTitle = opts?.title ?? `Frame ${state.frameCount}`;
+  const title = String(rawTitle).replace(/</g, '&lt;').replace(/>/g, '&gt;').slice(0, 200);
   const activeTab = opts?.activeTab ?? 'draw';
   const textContent = opts?.textContent ?? '';
   const imgSrc = opts?.imgSrc ?? null;
@@ -2178,7 +2201,7 @@ function addFrame(opts) {
 
   frame.innerHTML = `
     <div class="sb-frame-header">
-      <input class="sb-frame-title" value="${title}" placeholder="Label…" readonly title="Double-click to rename">
+      <input class="sb-frame-title" value="${escAttr(title)}" placeholder="Label…" readonly title="Double-click to rename">
       <button class="sb-frame-btn pin" title="Pin (lock position)">⊙</button>
       <button class="sb-frame-btn del" title="Delete">✕</button>
     </div>
@@ -2220,7 +2243,7 @@ function addFrame(opts) {
             </select>
             <input type="color" class="tfp-color sb-tfp-color" value="#1e293b" title="Text colour">
           </div>
-          <textarea class="sb-text-area" placeholder="Notes, descriptions, directions…">${textContent}</textarea>
+          <textarea class="sb-text-area" placeholder="Notes, descriptions, directions…">${escText(textContent)}</textarea>
         </div>
         <div class="sb-pane" data-pane="image" style="display:${activeTab==='image'?'flex':'none'};width:100%;height:100%;position:absolute;">
           <div class="sb-image-area" id="media-area-${id}">
@@ -2354,8 +2377,8 @@ function addFrame(opts) {
           let vid = raw.trim();
           const m = vid.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
           if (m) vid = m[1];
-          if (vid.length !== 11) { alert('Could not find a valid YouTube video ID in that URL.'); return; }
-          setMediaContent(`<iframe class="sb-media-iframe" src="https://www.youtube.com/embed/${vid}?rel=0" frameborder="0" allowfullscreen allow="autoplay; encrypted-media" style="width:100%;height:100%;min-height:160px;border:none;"></iframe>`);
+          if (!/^[a-zA-Z0-9_-]{11}$/.test(vid)) { alert('Could not find a valid YouTube video ID in that URL.'); return; }
+          setMediaContent(`<iframe class="sb-media-iframe" src="https://www.youtube.com/embed/${vid}?rel=0" frameborder="0" allowfullscreen allow="autoplay; encrypted-media" sandbox="allow-scripts allow-same-origin allow-presentation allow-popups" style="width:100%;height:100%;min-height:160px;border:none;"></iframe>`);
         }
       });
     });
@@ -2365,7 +2388,7 @@ function addFrame(opts) {
   if (opts && opts.imgSrc) {
     const src = opts.imgSrc;
     if (src.startsWith('yt:')) {
-      setMediaContent(`<iframe class="sb-media-iframe" src="https://www.youtube.com/embed/${src.slice(3)}?rel=0" frameborder="0" allowfullscreen allow="autoplay; encrypted-media" style="width:100%;height:100%;min-height:160px;border:none;"></iframe>`);
+      setMediaContent(`<iframe class="sb-media-iframe" src="https://www.youtube.com/embed/${src.slice(3)}?rel=0" frameborder="0" allowfullscreen allow="autoplay; encrypted-media" sandbox="allow-scripts allow-same-origin allow-presentation allow-popups" style="width:100%;height:100%;min-height:160px;border:none;"></iframe>`);
     } else if (src.startsWith('data:video') || src.match(/\.(mp4|webm|mov)/i)) {
       setMediaContent(`<video class="sb-media-video" src="${src}" controls style="max-width:100%;max-height:100%;"></video>`);
     } else {
@@ -2718,7 +2741,7 @@ function addWaveform(opts) {
 
   block.innerHTML = `
     <div class="waveform-header">
-      <span class="waveform-title">${filename}</span>
+      <span class="waveform-title">${escText(filename)}</span>
       <button class="waveform-ctrl" id="wc-play-${id}" title="Play/Pause">▶</button>
       <button class="waveform-ctrl" id="wc-stop-${id}" title="Stop">■</button>
       <div class="waveform-vol-wrap" id="wc-vol-wrap-${id}">
@@ -3226,7 +3249,13 @@ document.getElementById('audio-input').addEventListener('change', e => {
   const file = e.target.files[0]; if (!file) return;
   const pos = toCanvas(window.innerWidth / 2, (window.innerHeight - 84) * 0.6);
   const { block, wState, loadSamples } = addWaveform({ x: pos.x - 300, y: pos.y, filename: file.name });
-  document.getElementById('status-audio-info').innerHTML = `AUDIO: <span>${file.name}</span>`;
+  const _audioStatusEl = document.getElementById('status-audio-info');
+  _audioStatusEl.textContent = '';
+  const _audioLabel = document.createTextNode('AUDIO: ');
+  const _audioSpan = document.createElement('span');
+  _audioSpan.textContent = file.name;
+  _audioStatusEl.appendChild(_audioLabel);
+  _audioStatusEl.appendChild(_audioSpan);
 
   const reader = new FileReader();
   reader.onload = ev => {
@@ -3352,6 +3381,15 @@ function saveProject() {
 }
 
 function loadProject(proj) {
+  // Basic validation — reject anything that isn't a plain object with expected keys
+  if (!proj || typeof proj !== 'object' || Array.isArray(proj)) {
+    alert('Invalid project file.'); return;
+  }
+  // Sanitise string fields that get injected into the DOM
+  function sanitiseStr(val, fallback = '') {
+    if (typeof val !== 'string') return fallback;
+    return val.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
   // Clear existing
   document.querySelectorAll('.sb-frame, .canvas-label, .canvas-image, .waveform-block').forEach(el => el.remove());
   ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
