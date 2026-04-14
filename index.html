@@ -914,6 +914,166 @@
   }
   #easter-egg-close:hover { background: var(--accent-hover); }
 
+  /* ── TABLE MODAL ── */
+  #table-modal {
+    position: fixed; inset: 0;
+    background: rgba(30,41,59,0.4);
+    z-index: 9999;
+    display: none; align-items: center; justify-content: center;
+    backdrop-filter: blur(3px);
+  }
+  #table-modal.visible { display: flex; }
+  #table-box {
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 20px 60px rgba(30,41,59,0.2);
+    padding: 28px 32px;
+    width: 360px; max-width: calc(100vw - 32px);
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  #table-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 800; font-size: 16px; color: var(--text);
+  }
+  .table-row-cfg {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .table-row-cfg label {
+    font-size: 11px; font-weight: 500; color: var(--text-muted);
+    font-family: 'Inter', sans-serif; text-transform: uppercase;
+    letter-spacing: 0.04em; width: 70px; flex-shrink: 0;
+  }
+  .table-num-input {
+    width: 70px; border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm); padding: 7px 10px;
+    font-family: 'Inter', sans-serif; font-size: 13px;
+    color: var(--text); outline: none; box-shadow: var(--shadow-btn);
+    -moz-appearance: textfield; text-align: center;
+  }
+  .table-num-input::-webkit-inner-spin-button,
+  .table-num-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+  .table-num-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+  }
+  /* Live preview grid */
+  #table-preview {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    display: grid;
+    min-height: 80px; max-height: 180px;
+  }
+  .table-preview-cell {
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    min-height: 28px;
+    background: white;
+  }
+  .table-preview-cell:nth-child(-n+999):last-child,
+  .table-preview-cell.last-col { border-right: none; }
+  .table-preview-cell.last-row { border-bottom: none; }
+  .table-style-row {
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  }
+  .table-style-btn {
+    flex: 1; min-width: 80px;
+    border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+    background: white; font-family: 'Inter', sans-serif;
+    font-size: 11px; font-weight: 500; color: var(--text-muted);
+    padding: 6px 10px; cursor: pointer; transition: all 0.12s;
+    box-shadow: var(--shadow-btn); text-align: center;
+  }
+  .table-style-btn:hover { background: var(--bg); color: var(--text); border-color: var(--accent); }
+  .table-style-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+  .table-actions {
+    display: flex; gap: 8px; justify-content: flex-end;
+  }
+
+  /* Canvas table element */
+
+  .canvas-table-wrap {
+    position: absolute; z-index: 32;
+    display: flex; flex-direction: column;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    background: white;
+    transition: box-shadow 0.15s;
+    min-width: 160px;
+  }
+  .canvas-table-wrap:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.12), var(--shadow);
+  }
+  /* Header bar — matches frame header exactly */
+  .canvas-table-header {
+    background: var(--panel2);
+    border-bottom: 1px solid var(--border);
+    height: 32px; display: flex; align-items: center;
+    padding: 0 10px; gap: 6px; cursor: move; flex-shrink: 0;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+  .canvas-table-header-title {
+    flex: 1; font-size: 11px; color: var(--text);
+    font-family: 'Inter', sans-serif; font-weight: 600;
+    background: none; border: none; outline: none;
+    cursor: default; min-width: 0;
+    pointer-events: none; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap;
+  }
+  .canvas-table-header-title.editing {
+    cursor: text; pointer-events: all;
+    background: white; border-radius: 4px;
+    padding: 1px 5px; border: 1px solid var(--accent);
+  }
+  .canvas-table-hbtn {
+    background: none; border: none; cursor: pointer;
+    color: var(--text-muted); font-size: 12px; padding: 2px 4px;
+    line-height: 1; transition: all 0.12s; border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .canvas-table-hbtn:hover { background: var(--bg); color: var(--text); }
+  .canvas-table-hbtn.del:hover { background: rgba(239,68,68,0.1); color: #ef4444; }
+  .canvas-table-hbtn.pinned { color: white; background: var(--accent); }
+  /* Table sits inside the wrap flex column */
+  .canvas-table {
+    position: relative; /* not absolute */
+    border-collapse: collapse;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    font-family: 'Inter', sans-serif;
+    flex: 1; width: 100%;
+    cursor: default;
+  }
+  .canvas-table td {
+    border: 1px solid var(--border);
+    min-width: 80px; min-height: 32px; height: 32px;
+    padding: 4px 8px; font-size: 12px; color: var(--text);
+    outline: none; vertical-align: top;
+    cursor: text; white-space: pre-wrap; word-break: break-word;
+  }
+  .canvas-table.has-header tr:first-child td {
+    background: var(--panel2);
+    font-weight: 600; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--text-muted);
+  }
+  .canvas-table.striped tr:nth-child(even) td { background: var(--bg); }
+  .canvas-table-resize {
+    position: absolute; bottom: 0; right: 0;
+    width: 18px; height: 18px; cursor: se-resize; z-index: 5;
+  }
+  .canvas-table-resize::after {
+    content: ''; position: absolute; bottom: 4px; right: 4px;
+    width: 7px; height: 7px;
+    border-right: 2px solid var(--border-strong);
+    border-bottom: 2px solid var(--border-strong);
+    border-radius: 1px;
+  }
+
   /* ── FEEDBACK MODAL ── */
   #feedback-modal {
     position: fixed; inset: 0;
@@ -1098,8 +1258,9 @@
 
   <div class="tb-group">
     <button class="tb-btn" id="btn-add-frame" title="Add Storyboard Frame (F)"><img src="icons/Frame.png" width="24" height="24" alt="Add Frame"></button>
-    <button class="tb-btn" id="btn-add-audio" title="Add Audio Track (A)"><img src="icons/music.png" width="24" height="24" alt="Add Frame"></button>
-    <button class="tb-btn" id="btn-add-image" title="Import Image (I)"><img src="icons/Image.png" width="24" height="24" alt="Add Frame"></button>
+    <button class="tb-btn" id="btn-add-audio" title="Add Audio Track (A)">&#9835;</button>
+    <button class="tb-btn" id="btn-add-image" title="Import Image (I)">&#128444;</button>
+    <button class="tb-btn-text" id="btn-add-table" title="Insert Table">&#8862; Table</button>
   </div>
 
   <div id="toolbar-right">
@@ -1192,6 +1353,35 @@
   <div class="tfp-sep"></div>
   <span class="tfp-label">Colour</span>
   <input type="color" class="tfp-color" id="tfp-color" value="#1e293b">
+</div>
+
+<!-- TABLE MODAL -->
+<div id="table-modal">
+  <div id="table-box">
+    <div id="table-title">&#8862; Insert Table</div>
+    <div class="table-row-cfg">
+      <label>Rows</label>
+      <input class="table-num-input" type="number" id="table-rows" min="1" max="20" value="3">
+    </div>
+    <div class="table-row-cfg">
+      <label>Columns</label>
+      <input class="table-num-input" type="number" id="table-cols" min="1" max="20" value="3">
+    </div>
+    <div class="table-row-cfg">
+      <label>Style</label>
+      <div class="table-style-row">
+        <button class="table-style-btn active" data-style="plain">Plain</button>
+        <button class="table-style-btn" data-style="header">Header Row</button>
+        <button class="table-style-btn" data-style="striped">Striped</button>
+        <button class="table-style-btn" data-style="both">Header + Striped</button>
+      </div>
+    </div>
+    <div id="table-preview"></div>
+    <div class="table-actions">
+      <button class="fb-cancel" id="table-cancel">Cancel</button>
+      <button class="fb-submit" id="table-insert">Insert Table</button>
+    </div>
+  </div>
 </div>
 
 <!-- FEEDBACK MODAL -->
@@ -3462,7 +3652,7 @@ function loadProject(proj) {
     return val.replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
   // Clear existing
-  document.querySelectorAll('.sb-frame, .canvas-label, .canvas-image, .waveform-block').forEach(el => el.remove());
+  document.querySelectorAll('.sb-frame, .canvas-label, .canvas-image, .waveform-block, .canvas-table-wrap').forEach(el => el.remove());
   ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
   state.frameCount = 0; state.labelCount = 0; state.imageCount = 0;
 
@@ -3752,6 +3942,23 @@ function captureWorkspace(ws) {
     const img = ci.querySelector('img');
     ws.images.push({ x: parseFloat(ci.style.left), y: parseFloat(ci.style.top), src: img.src, w: img.style.width, h: img.style.height });
   });
+  ws.tables = [];
+  document.querySelectorAll('.canvas-table-wrap').forEach(tw => {
+    const tbl   = tw.querySelector('.canvas-table');
+    const titleInput = tw.querySelector('.canvas-table-header-title');
+    const rows = [];
+    tbl.querySelectorAll('tr').forEach(tr => { const row = []; tr.querySelectorAll('td').forEach(td => row.push(td.textContent)); rows.push(row); });
+    ws.tables.push({
+      x: parseFloat(tw.style.left), y: parseFloat(tw.style.top),
+      rows: rows.length, cols: rows[0]?.length || 0,
+      title: titleInput ? titleInput.value : '',
+      style: tbl.classList.contains('has-header') && tbl.classList.contains('striped') ? 'both'
+           : tbl.classList.contains('has-header') ? 'header'
+           : tbl.classList.contains('striped')    ? 'striped' : 'plain',
+      cellData: rows,
+      w: tw.style.width, h: tw.style.height,
+    });
+  });
   // Capture waveform (position + size only — audio buffer can't be serialised)
   ws.waveforms = [];
   document.querySelectorAll('.waveform-block').forEach(wb => {
@@ -3761,7 +3968,7 @@ function captureWorkspace(ws) {
 
 function restoreWorkspace(ws) {
   // Clear current canvas
-  document.querySelectorAll('.sb-frame, .canvas-label, .canvas-image, .waveform-block').forEach(el => el.remove());
+  document.querySelectorAll('.sb-frame, .canvas-label, .canvas-image, .waveform-block, .canvas-table-wrap').forEach(el => el.remove());
   ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
   octx.clearRect(0, 0, overlay.width, overlay.height);
   strokeHistory = []; undoStack = [];
@@ -3802,6 +4009,12 @@ function restoreWorkspace(ws) {
     const img = el.querySelector('img');
     if (im.w) { img.style.maxWidth = 'none'; img.style.width = im.w; }
     if (im.h) img.style.height = im.h;
+  });
+  (ws.tables || []).forEach(t => {
+    const tw = addTable({ rows: t.rows, cols: t.cols, style: t.style, x: t.x, y: t.y, cellData: t.cellData });
+    const tbl = tw.querySelector('.canvas-table');
+    if (t.w) tbl.style.width  = t.w;
+    if (t.h) tbl.style.height = t.h;
   });
   // Waveforms: restore visual shell and prompt user to re-select the audio file.
   // Browsers block re-accessing local files across sessions for security reasons.
@@ -4281,6 +4494,177 @@ document.getElementById('btn-export-pdf').addEventListener('click', async () => 
     console.error('PDF export failed:', err);
     alert('Export failed — check the console for details.');
   }
+});
+
+// ═══════════════════════════════════════════════════════════
+// TABLE
+// ═══════════════════════════════════════════════════════════
+let tableCount = 0;
+function addTable(opts) {
+  tableCount++;
+  const rows     = opts?.rows     ?? 3;
+  const cols     = opts?.cols     ?? 3;
+  const style    = opts?.style    ?? 'plain';
+  const x        = opts?.x        ?? 400;
+  const y        = opts?.y        ?? 300;
+  const cellData = opts?.cellData ?? null;
+  const title    = opts?.title    ?? `Table ${tableCount}`;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'canvas-table-wrap';
+  wrap.style.left = x + 'px';
+  wrap.style.top  = y + 'px';
+
+  // ── Header bar ──
+  const header = document.createElement('div');
+  header.className = 'canvas-table-header';
+
+  const titleEl = document.createElement('input');
+  titleEl.className = 'canvas-table-header-title';
+  titleEl.value = title;
+  titleEl.readOnly = true;
+  titleEl.title = 'Double-click to rename';
+
+  function activateTitle(e) {
+    if (e) e.preventDefault();
+    titleEl.readOnly = false;
+    titleEl.classList.add('editing');
+    titleEl.focus(); titleEl.select();
+  }
+  header.addEventListener('dblclick', activateTitle);
+  header.addEventListener('contextmenu', activateTitle);
+  titleEl.addEventListener('blur', () => { titleEl.readOnly = true; titleEl.classList.remove('editing'); });
+  titleEl.addEventListener('keydown', e => { if (e.key === 'Enter') titleEl.blur(); e.stopPropagation(); });
+  titleEl.addEventListener('mousedown', e => { if (!titleEl.readOnly) e.stopPropagation(); });
+
+  const pinBtn = document.createElement('button');
+  pinBtn.className = 'canvas-table-hbtn';
+  pinBtn.textContent = '⊙'; pinBtn.title = 'Pin table';
+
+  const delBtn = document.createElement('button');
+  delBtn.className = 'canvas-table-hbtn del';
+  delBtn.textContent = '✕'; delBtn.title = 'Delete table';
+  delBtn.addEventListener('click', () => wrap.remove());
+
+  header.appendChild(titleEl);
+  header.appendChild(pinBtn);
+  header.appendChild(delBtn);
+
+  // ── Table ──
+  const table = document.createElement('table');
+  table.className = 'canvas-table';
+  if (style === 'header' || style === 'both') table.classList.add('has-header');
+  if (style === 'striped' || style === 'both') table.classList.add('striped');
+
+  const tbody = document.createElement('tbody');
+  for (let r = 0; r < rows; r++) {
+    const tr = document.createElement('tr');
+    for (let c = 0; c < cols; c++) {
+      const td = document.createElement('td');
+      td.contentEditable = 'true';
+      td.spellcheck = false;
+      if (cellData && cellData[r] && cellData[r][c]) td.textContent = cellData[r][c];
+      td.addEventListener('mousedown', e => e.stopPropagation());
+      td.addEventListener('pointerdown', e => e.stopPropagation());
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
+
+  // ── Resize handle ──
+  const resizeH = document.createElement('div');
+  resizeH.className = 'canvas-table-resize';
+  resizeH.addEventListener('mousedown', e => {
+    e.stopPropagation(); e.preventDefault();
+    const startX = e.clientX, startY = e.clientY;
+    const startW = wrap.offsetWidth, startH = wrap.offsetHeight;
+    const onMove = ev => {
+      const dw = (ev.clientX - startX) / state.zoom;
+      const dh = (ev.clientY - startY) / state.zoom;
+      wrap.style.width  = Math.max(160, startW + dw) + 'px';
+      wrap.style.height = Math.max(80,  startH + dh) + 'px';
+    };
+    const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  });
+
+  wrap.appendChild(header);
+  wrap.appendChild(table);
+  wrap.appendChild(resizeH);
+  infiniteCanvas.appendChild(wrap);
+
+  // Drag by header, pin whole wrap
+  makeDraggable(wrap, header);
+  makePinnable(wrap, pinBtn);
+
+  // Restore size if saved
+  if (opts?.w) wrap.style.width  = opts.w;
+  if (opts?.h) wrap.style.height = opts.h;
+
+  return wrap;
+}
+
+// ── Table modal ───────────────────────────────────────────────
+const tableModal   = document.getElementById('table-modal');
+const tableRows    = document.getElementById('table-rows');
+const tableCols    = document.getElementById('table-cols');
+const tablePreview = document.getElementById('table-preview');
+let   tableStyle   = 'plain';
+
+function updateTablePreview() {
+  const r = Math.min(20, Math.max(1, parseInt(tableRows.value) || 3));
+  const c = Math.min(20, Math.max(1, parseInt(tableCols.value) || 3));
+  tablePreview.style.gridTemplateColumns = `repeat(${c}, 1fr)`;
+  tablePreview.innerHTML = '';
+  for (let ri = 0; ri < r; ri++) {
+    for (let ci = 0; ci < c; ci++) {
+      const cell = document.createElement('div');
+      cell.className = 'table-preview-cell';
+      if (ci === c - 1) cell.classList.add('last-col');
+      if (ri === r - 1) cell.classList.add('last-row');
+      const isHeader = (tableStyle === 'header' || tableStyle === 'both') && ri === 0;
+      const isStripe = (tableStyle === 'striped' || tableStyle === 'both') && ri % 2 === 1;
+      if (isHeader) cell.style.background = 'var(--panel2)';
+      if (isStripe && !isHeader) cell.style.background = 'var(--bg)';
+      tablePreview.appendChild(cell);
+    }
+  }
+}
+
+document.getElementById('btn-add-table').addEventListener('click', () => {
+  tableModal.classList.add('visible');
+  updateTablePreview();
+});
+
+document.getElementById('table-cancel').addEventListener('click', () => tableModal.classList.remove('visible'));
+tableModal.addEventListener('click', e => { if (e.target === tableModal) tableModal.classList.remove('visible'); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && tableModal.classList.contains('visible')) tableModal.classList.remove('visible');
+});
+
+tableRows.addEventListener('input', updateTablePreview);
+tableCols.addEventListener('input', updateTablePreview);
+
+document.querySelectorAll('.table-style-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.table-style-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    tableStyle = btn.dataset.style;
+    updateTablePreview();
+  });
+});
+
+document.getElementById('table-insert').addEventListener('click', () => {
+  const r = Math.min(20, Math.max(1, parseInt(tableRows.value) || 3));
+  const c = Math.min(20, Math.max(1, parseInt(tableCols.value) || 3));
+  const pos = {
+    x: (container.scrollLeft + window.innerWidth  / 2) / state.zoom - (c * 80) / 2,
+    y: (container.scrollTop  + (window.innerHeight - TOOLBAR_H - 26) / 2) / state.zoom - (r * 32) / 2,
+  };
+  addTable({ rows: r, cols: c, style: tableStyle, x: pos.x, y: pos.y });
+  tableModal.classList.remove('visible');
 });
 
 // ═══════════════════════════════════════════════════════════
