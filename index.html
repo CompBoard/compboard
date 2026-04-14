@@ -77,6 +77,24 @@
   }
   #toolbar::-webkit-scrollbar { display: none; }
 
+  /* Scroll hint arrows — shown when toolbar has overflow */
+  .toolbar-scroll-hint {
+    position: fixed; top: 0; width: 40px; height: 52px;
+    display: none; align-items: center; justify-content: center;
+    z-index: 1001; pointer-events: none;
+    font-size: 14px; font-weight: 700; color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .toolbar-scroll-hint.visible { display: flex; }
+  #toolbar-hint-left  {
+    left: 0;
+    background: linear-gradient(to right, rgba(59,130,246,0.95) 40%, transparent);
+  }
+  #toolbar-hint-right {
+    right: 0;
+    background: linear-gradient(to left, rgba(59,130,246,0.95) 40%, transparent);
+  }
+
   #logo {
     padding: 0 18px;
     font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
@@ -1036,6 +1054,8 @@
 <body>
 
 <!-- TOOLBAR -->
+<div id="toolbar-hint-left"  class="toolbar-scroll-hint">◀</div>
+<div id="toolbar-hint-right" class="toolbar-scroll-hint">▶</div>
 <div id="toolbar">
   <div id="logo">COMP<span>BOARD</span></div>
 
@@ -1587,6 +1607,24 @@ function updateToolbarH() {
 
 const overlay = document.getElementById('stroke-overlay');
 const octx    = overlay.getContext('2d');
+
+// ── Toolbar scroll hints ──────────────────────────────────────
+const toolbarEl       = document.getElementById('toolbar');
+const hintLeft        = document.getElementById('toolbar-hint-left');
+const hintRight       = document.getElementById('toolbar-hint-right');
+
+function updateToolbarHints() {
+  if (!toolbarEl) return;
+  const scrollLeft  = toolbarEl.scrollLeft;
+  const maxScroll   = toolbarEl.scrollWidth - toolbarEl.clientWidth;
+  hintLeft.classList.toggle('visible',  maxScroll > 4 && scrollLeft > 4);
+  hintRight.classList.toggle('visible', maxScroll > 4 && scrollLeft < maxScroll - 4);
+}
+
+toolbarEl.addEventListener('scroll', updateToolbarHints);
+window.addEventListener('resize',   updateToolbarHints);
+// Run after DOM settles so scrollWidth is accurate
+setTimeout(updateToolbarHints, 100);
 
 function resizeOverlay() {
   updateToolbarH();
